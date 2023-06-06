@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     todoData.removeTasks.push(removedTask);
     render();
     saveLocalStorage();
-    attachRemoveTaskHandlers();
+    addRemoveTaskdelete();
   };
 
   const addRemoveTaskdelete = () => {
@@ -84,7 +84,6 @@ document.addEventListener('DOMContentLoaded', () => {
     addRemoveTaskdelete();
   })
 
-  localStorage.clear()
 });
 
 
