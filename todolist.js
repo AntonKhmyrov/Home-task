@@ -38,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
       </li>`
     });
     taskList.innerHTML = list
+    addRemoveTaskHedler()
   }
 
   const saveLocalStorage = () => {
@@ -49,10 +50,9 @@ document.addEventListener('DOMContentLoaded', () => {
     todoData.removeTasks.push(removedTask);
     render();
     saveLocalStorage();
-    addRemoveTaskdelete();
   };
 
-  const addRemoveTaskdelete = () => {
+  const addRemoveTaskHedler = () => {
     const removeBtns = Array.from(taskList.getElementsByClassName('crossmark'));
 
     removeBtns.forEach((btn, index) => {
@@ -67,7 +67,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const initData = JSON.parse(localStorage.getItem('data'))
     todoData = initData || todoData;
     render();
-    addRemoveTaskdelete();
   }
 
   init()
@@ -79,9 +78,9 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     createTask(inputValue);
+    input.value = '';
     render();
     saveLocalStorage();
-    addRemoveTaskdelete();
   })
 
 });
