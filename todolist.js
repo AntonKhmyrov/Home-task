@@ -2,14 +2,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const input = document.querySelector('.todo__input');
   const inputBtn = document.querySelector('.todo__add-btn');
   const taskList = document.querySelector('.todo__task-list');
-
-
-
+  const selectTask = document.querySelector('.todo__select');
+  const allClearTaskBtn = document.querySelector('.todo__all-clear-task');
 
   let todoData = {
     existTask: [],
     removeTasks: [],
-    completedTasks: []
+    completedTasks: [],
+    selectedTab: 'active'
   }
 
   const createTask = (title = "new task") => { //title = "new task" default value
@@ -20,14 +20,23 @@ document.addEventListener('DOMContentLoaded', () => {
     todoData.existTask.push(newTask)
   }
 
-  const render = () => {
-    let list = ''
-    todoData.existTask.forEach(element => {
-      list += `
+  const render = (value) => {
+    let list = '';
+    let tasks = [];
+    if (value === 'active') {
+      tasks = todoData.existTask
+    } else if (value === 'completed') {
+      tasks = todoData.completedTasks
+    } else if (value === 'deleted') {
+      tasks = todoData.removeTasks
+    }
+    if (tasks.length) {
+      tasks.forEach(element => {
+        list += `
       <li class="todo__task-item">
         <p class="todo__task-name">${element.title}</p>
         <p class="todo__task-text"></p>
-        <div class="todo__update-btns">
+        <div class="todo__update-btns todo__btn-${value}">
           <div class="update-btn todo__remove-task-btn">
             <span class="crossmark">&#10006;</span>
           </div>
@@ -36,29 +45,45 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         </div>
       </li>`
-    });
-    taskList.innerHTML = list
-    addRemoveTaskHedler()
+      });
+    }
+    taskList.innerHTML = list;
+    addTaskHendller();
+    saveLocalStorage();
   }
 
   const saveLocalStorage = () => {
     localStorage.setItem('data', JSON.stringify(todoData))
   }
 
-  const removeTask = (index) => {
-    const removedTask = todoData.existTask.splice(index, 1)[0];
-    todoData.removeTasks.push(removedTask);
-    render();
-    saveLocalStorage();
+  const removeTask = (index, select) => {
+    if (select === 'active') {
+      todoData.removeTasks.push(todoData.existTask.splice(index, 1)[0]);
+    } else if (select === 'completed') {
+      todoData.removeTasks.push(todoData.completedTasks.splice(index, 1)[0])
+    }
+    render(select);
   };
 
-  const addRemoveTaskHedler = () => {
-    const removeBtns = Array.from(taskList.getElementsByClassName('crossmark'));
+  const completedTask = (index, select) => {
+    if (select === 'active') {
+      todoData.completedTasks.push(todoData.existTask.splice(index, 1)[0]);
+    } else if (select === 'deleted') {
+      todoData.completedTasks.push(todoData.removeTasks.splice(index, 1)[0])
+    }
+    render(select);
+  };
 
-    removeBtns.forEach((btn, index) => {
-      btn.removeEventListener('click', removeTask);
-      btn.addEventListener('click', () => {
-        removeTask(index);
+  const addTaskHendller = () => {
+    const updateBtns = Array.from(taskList.getElementsByClassName('todo__update-btns'));
+
+    updateBtns.forEach((btn, index) => {
+      btn.addEventListener('click', ({ target }) => {
+        if (target.closest('.todo__remove-task-btn')) {
+          removeTask(index, todoData.selectedTab)
+        } else if (target.closest('.todo__complete-task-btn')) {
+          completedTask(index, todoData.selectedTab)
+        }
       });
     });
   };
@@ -66,10 +91,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const init = () => {
     const initData = JSON.parse(localStorage.getItem('data'))
     todoData = initData || todoData;
-    render();
+    render('active');
   }
 
   init()
+
+  selectTask.addEventListener('change', () => {
+    todoData.selectedTab = selectTask.value
+    render(selectTask.value)
+    if (selectTask.value === 'active') {
+      input.removeAttribute('disabled');
+    } else {
+      input.setAttribute('disabled', 'true')
+    }
+  });
 
   inputBtn.addEventListener('click', () => {
     const inputValue = input.value.trim();
@@ -79,76 +114,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     createTask(inputValue);
     input.value = '';
-    render();
-    saveLocalStorage();
+    render('active');
   })
 
+  allClearTaskBtn.addEventListener('click', () => {
+    todoData = {
+      existTask: [],
+      removeTasks: [],
+      completedTasks: [],
+      selectedTab: 'active'
+    }
+    localStorage.clear();
+    init();
+  })
 });
-
-
-  // 1) сделать удаление таски без локал стореджа (функцию)
-  // 3) удаленная таска удаляется с existTask в removeTasks
-  // 2) сделать обновление и сохранение локал стореджа (вывести в консль existTask и removeTasks)0
-
-// 1) Метод querySelector() шукає перший елемент, який відповідає переданому селектору.
-// Він повертає знайдений елемент.
-
-// 3) Метод addEventListener() додає обробник подій до вибраного елементу.
-
-// 4) Метод trim() видаляє пробіли з початку та кінця рядка.
-// Використовується для очищення введеного тексту від зайвих пробілів.
-
-// 5) Метод getElementsByClassName() повертає колекцію елементів, які мають заданий клас.
-
-// 6)Метод some() перевіряє, чи задовольняє хоча б один елемент.
-// Повертає true, якщо умова виконується для хоча б одного елемента, і false - якщо ні.
-
-// 7) Метод createElement() створює новий елемент з вказаним тегом.
-// Повертає новостворений елемент.
-
-// 8)Властивість classList представляє список класів елемента.
-// Метод add() додає клас до списку класів елемента.
-
-// 9) Властивість textContent містить текстовий вміст елемента.
-// Використовується для встановлення або отримання тексту, що відображається в елементі.
-
-// 10) Властивість innerHTML містить HTML-код, який представляє дочірні елементи та вміст елемента.
-// Використовується для встановлення або отримання HTML-структури в елементі.
-
-// 11)  appendChild() - це метод, який використовується для додавання нового дочірнього вузла до
-// батьківського вузла в DOM (Document Object Model) в JavaScript.
-
-// const parent = document.getElementById("parentElement");
-// const newChild = document.createElement("div");
-// newChild.textContent = "Новий дочірній вузол";
-// parent.appendChild(newChild);
-
-// 11.1) removeChild() - це метод, який використовується для видалення дочірнього вузла з батьківського
-// вузла в DOM (Document Object Model) в JavaScript.
-
-// const parent = document.getElementById("parentElement");
-// const child = document.getElementById("childElement");
-// parent.removeChild(child);
-
-// 12) Властивість value містить значення поля введення.
-// Використовується для отримання або встановлення значення поля введення.
-
-// 13) outerHTML - це властивість, яка доступна для елементів веб-сторінки в об'єктному представленні веб-документа,
-// такому як Document Object Model (DOM). Властивість outerHTML містить  HTML-код, який представляє елемент,
-// включаючи всі його дочірні елементи і текстовий вміст.
-
-// 14) JSON.parse(): Цей метод приймає рядок JSON і перетворює його в JavaScript-об'єкт або масив. Рядок JSON
-// повинен бути валідним JSON-форматом
-
-// const jsonString = '{"name":"John","age":30,"city":"New York"}';
-// let jsonObj = JSON.parse(jsonString);
-// console.log(jsonObj.name, jsonObj.age, jsonObj.city); // Виведе "John" // 30 // "New York"
-
-// 14.1) JSON.stringify(): Цей метод приймає JavaScript-об'єкт або масив і перетворює його в рядок JSON.
-// Він використовується для серіалізації об'єктів в JSON-формат.
-
-// const obj = { name: "John", age: 30, city: "New York" };
-// const arrs = ['str', 1, 10, true]
-// let jsonStringsObj = JSON.stringify(obj);
-// let jsonStringsArr = JSON.stringify(arrs);  // Виведе {"name":"John","age":30,"city":"New York"}
-// console.log(jsonStringsObj, jsonStringsArr); // Виведе ["str",1,10,true]
